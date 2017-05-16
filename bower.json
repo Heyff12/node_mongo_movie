@@ -1,0 +1,23 @@
+{
+  "name": "mooc",
+  "description": "",
+  "main": "app.js",
+  "authors": [
+    "chujunfang <chujunfang@qfpay.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/libs",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "jquery": "^3.2.1"
+  }
+}
