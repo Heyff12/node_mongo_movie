@@ -16,7 +16,6 @@ var morgan = require('morgan');
 
 
 //文件上传
-//app.use(express.multipart());//报错不适用
 app.use(require('connect-multiparty')());
 // 表单数据格式化
 app.use(bodyParser.json());
