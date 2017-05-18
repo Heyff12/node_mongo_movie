@@ -9,8 +9,6 @@ var _ = require('underscore');
 //http://www.css88.com/doc/underscore
 var user_power = require('../app/controllers/user_power');
 //var comment_power = require('../app/controllers/comment_power');
-var fs=require('fs');//读写文件
-var path=require('path');//路径
 
 
 module.exports = function(app) {
@@ -25,8 +23,8 @@ module.exports = function(app) {
     // });
     //pre handle user
     app.use(function(req, res, next) {
-        // console.log('user in session===');
-        // console.log(req.session.user);
+        console.log('user in session===');
+        console.log(req.session.user);
         var _user = req.session.user;
         if (_user) {
             app.locals.user = _user;
@@ -47,16 +45,16 @@ module.exports = function(app) {
                         title: 'mooc 首页',
                         catetories: catetories
                     }) //render是jade框架里面用来指定那个jade的方法
-            });
-        // Movie.fetch(function(err, movies) {
-        //     if (err) {
-        //         console.log(err)
-        //     }
-        //     res.render('index', {
-        //             title: 'mooc 首页',
-        //             movies: movies
-        //         }) //render是jade框架里面用来指定那个jade的方法
-        // })
+            })
+            // Movie.fetch(function(err, movies) {
+            //     if (err) {
+            //         console.log(err)
+            //     }
+            //     res.render('index', {
+            //             title: 'mooc 首页',
+            //             movies: movies
+            //         }) //render是jade框架里面用来指定那个jade的方法
+            // })
     });
     //detail page--链接
     app.get('/movie/:id', function(req, res) {
@@ -71,11 +69,6 @@ module.exports = function(app) {
         //     })            
         // })
         Movie.findById(id, function(err, movie) {
-            Movie.update({_id:id},{$inc:{pv:1}},function(err){
-                if(err){
-                    console.log(err);
-                }
-            })
             Comment
                 .find({ movie: id })
                 .populate('from', 'name')
@@ -94,13 +87,13 @@ module.exports = function(app) {
         // console.log("###################");
         // console.log(res);
         // console.log("###################");
-        Catetory.find({}, function(err, catetories) {
+        Catetory.find({},function(err,catetories){
             res.render('admin', {
                 title: 'mooc 后台录入',
-                catetories: catetories,
+                catetories:catetories,
                 movie: {}
             })
-        });
+        });        
     });
     //admin update movie--链接
     app.get('/admin/movie/update/:id', user_power.singinRequired, user_power.adminRequired, function(req, res) {
@@ -108,21 +101,18 @@ module.exports = function(app) {
         //这里的逻辑是如果获取到了id就查找这个id对应的数据传到admin录入，这里要求admin录入页value要有对应
         if (id) {
             Movie.findById(id, function(err, movie) {
-                Catetory.find({}, function(err, catetories) {
-                    if (err) {
-                        console.log(err)
-                    }
-                    res.render('admin', {
-                        title: 'mooc后台更新页',
-                        movie: movie,
-                        catetories: catetories
-                    })
+                if (err) {
+                    console.log(err)
+                }
+                res.render('admin', {
+                    title: 'mooc后台更新页',
+                    movie: movie
                 })
-            });
+            })
         }
     });
     //admin post movie--接口
-    app.post('/admin/movie', user_power.singinRequired, user_power.adminRequired,user_power.savePoster, function(req, res) {
+    app.post('/admin/movie', user_power.singinRequired, user_power.adminRequired, function(req, res) {
         // console.log("!!!!!!!11111!!!!!!!!");
         // console.log(req.body);
         // console.log("!!!!!!!2222!!!!!!!!!");
@@ -131,10 +121,7 @@ module.exports = function(app) {
         var id = req.body.movie._id;
         var movieObj = req.body.movie; //用了bodyParser就可以采用这种req.body.movie获取前端页面传过来的值，以json格式包装
         var _movie;
-        if(req.poster){
-            movieObj.poster=req.poster;
-        }
-        if (id) {
+        if (id !== 'undefined') {
             Movie.findById(id, function(err, movie) {
                 if (err) {
                     console.log(err);
@@ -148,34 +135,21 @@ module.exports = function(app) {
                 })
             })
         } else {
-            _movie = new Movie(movieObj);
-            var caterotyId = movieObj.catetory;
-            var catetoryName = movieObj.catetoryName;
+            _movie = new Movie({
+                doctor: movieObj.doctor,
+                title: movieObj.title,
+                country: movieObj.country,
+                language: movieObj.language,
+                year: movieObj.year,
+                poster: movieObj.poster,
+                summary: movieObj.summary,
+                flash: movieObj.flash,
+            })
             _movie.save(function(err, movie) {
                 if (err) {
                     console.log(err);
                 }
-                if (caterotyId) {
-                    Catetory.findById(caterotyId, function(err, catetory) {
-                        catetory.movies.push(movie._id);
-                        catetory.save(function(err, catetory) {
-                            res.redirect('/movie/' + movie._id);
-                        });
-                    })
-                } else if (catetoryName) {
-                    var catetory = new Catetory({
-                        name: catetoryName,
-                        movies: [movie._id]
-                    });
-                    catetory.save(function(err, catetory) {
-                        movie.catetory = catetory._id;
-                        movie.save(function(err, movie) {
-                            res.redirect('/movie/' + movie._id);
-                        })
-                    });
-
-                }
-
+                res.redirect('/movie/' + movie._id);
             })
         }
     });
@@ -365,13 +339,13 @@ module.exports = function(app) {
     app.get('/admin/catetory/new', user_power.singinRequired, user_power.adminRequired, function(req, res) {
         res.render('catetory_admin', {
             title: 'mooc 后台分类录入业',
-            catetory: {}
+            catetory:{}
         })
     });
     //admin post catetory--接口
     app.post('/admin/catetory', user_power.singinRequired, user_power.adminRequired, function(req, res) {
         var _catetory = req.body.catetory;
-        var catetory = new Catetory(_catetory);
+        var catetory = new Catetory(_catetory); 
         catetory.save(function(err, catetory) {
             if (err) {
                 console.log(err);
@@ -430,55 +404,4 @@ module.exports = function(app) {
             res.json({ success: 0 });
         }
     });
-    //搜索--接口
-    app.get('/results', function(req, res) {
-        var catId = req.query.cat;
-        var q = req.query.q;
-        var page = parseInt(req.query.p, 10) || 0;
-        var count = 2;
-        var index = page * count;
-
-        if (catId) {
-            Catetory
-                .find({ _id: catId })
-                .populate({
-                    path: 'movies',
-                    select: 'title poster',
-                    //options: { limit: 2, skip: index }
-                })
-                .exec(function(err, catetories) {
-                    if (err) {
-                        console.log(err)
-                    }
-                    var category = catetories[0] || {};
-                    var movies = category.movies || [];
-                    var results = movies.slice(index, index + count);
-                    res.render('results', {
-                        title: 'mooc 搜索列表页面',
-                        keyword: category.name,
-                        currentPage: (page + 1),
-                        totalPage: Math.ceil(movies.length / count),
-                        movies: results,
-                        query: 'cat=' + catId,
-                    });
-                });
-        } else {
-            Movie
-                .find({ title: new RegExp(q + '.*','i') })
-                .exec(function(err, movies) {
-                    if (err) {
-                        console.log(err)
-                    }
-                    var results = movies.slice(index, index + count);
-                    res.render('results', {
-                        title: 'mooc 搜索列表页面',
-                        keyword: q,
-                        currentPage: (page + 1),
-                        totalPage: Math.ceil(movies.length / count),
-                        movies: results,
-                        query: 'q=' + q,
-                    });
-                });
-        }
-    })
 }

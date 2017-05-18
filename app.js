@@ -1,6 +1,7 @@
 var express = require('express'); //express是基于 Node.js 平台，快速、开放、极简的 web 开发框架。
 var port = process.env.PORT || 3000; //获取一个端口号，或者是用户自己指定，默认3000
 var path = require('path'); //NodeJS中的Path对象，用于处理目录的对象，提高开发效率。
+var fs = require('fs'); //文件读取
 var app = express(); //使用express框架
 var bodyParser = require('body-parser'); //表单传输与request对应解析成json数据比较常用
 var moment = require('moment'); //处理时间格式
@@ -12,10 +13,11 @@ var mongoose = require('mongoose'); //引入mongodb数据库的框架
 var bluebird = require('bluebird');
 //打印log
 var morgan = require('morgan');
-//文件上传--暂时没有使用
-var multer = require('multer'); //npm install multer--暂未使用//上传文件框架，可以是一个文件也可以是多个文件
-var upload = multer({ dest: './uploads' }); //上传文件的时候用的--暂未使用
 
+
+//文件上传
+//app.use(express.multipart());//报错不适用
+app.use(require('connect-multiparty')());
 // 表单数据格式化
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -40,6 +42,25 @@ mongoose.connect(dbUrl);
 // db.connection.on("open", function() {
 //     console.log("------数据库连接成功！------");
 // });
+//models loading
+var models_path = __dirname + '/app/modals';
+var walk = function(path) {
+    fs
+        .readdirSync(path)
+        .forEach(function(file) {
+            var newPath = path + '/' + file;
+            var stat = fs.statSync(newPath);
+            if (stat.isFile()) {
+                if (/(.*)\.(js|coffee)/.test(file)) {
+                    require(newPath);
+                }
+            } else if (stat.isDirectory()) {
+                walk(newPath)
+            }
+        })
+}
+walk(models_path);
+
 
 //配置cookie--session持久化
 app.use(session({
