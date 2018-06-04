@@ -1,6 +1,7 @@
-var crypto = require('crypto');
-var bcrypt = require('bcrypt');
+var crypto = require('crypto');//字符串的随机生成
+var bcrypt = require('bcrypt');//密码加密
 
+//获取随机字符串
 function getRandomString(len) {
     if (!len) len = 16;
     return crypto.randomBytes(Math.ceil(len / 2)).toString('hex')

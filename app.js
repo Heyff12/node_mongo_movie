@@ -31,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'public'))); //可以让其他js文�
 //数据库配置
 //mongoose.Promise = global.Promise;
 mongoose.Promise = bluebird; //保证数据库全局通用--解决报错-改成localhost:27017解决
-var dbUrl = "mongodb://127.0.0.1:27017/mooc";
+var dbUrl = "mongodb://mooc:mooc12@127.0.0.1:27017/mooc";
 mongoose.connect(dbUrl);
 //测试数据库是否联通
 // var db = mongoose.connect(dbUrl);
